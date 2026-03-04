@@ -1,0 +1,29 @@
+# General
+.DS_Store
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/
+*.iml
+
+# Backend (Java/Maven)
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/logs/
+
+# Frontend (Node/React)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Database
+*.db
+*.sqlite
+
+# Docker
+.docker/
+
+
