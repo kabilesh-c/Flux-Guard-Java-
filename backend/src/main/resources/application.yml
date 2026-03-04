@@ -1,0 +1,134 @@
+spring:
+  application:
+    name: fraud-detection-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:frauddb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:}
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 20000
+      validation-timeout: 5000
+      idle-timeout: 300000
+      max-lifetime: 900000
+      leak-detection-threshold: 60000
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: public
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: UTC
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-please-make-it-long-enough}
+  expiration: 86400000 # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days in milliseconds
+
+# Supabase Configuration
+supabase:
+  url: ${SUPABASE_URL:}
+  key: ${SUPABASE_KEY:}
+
+# Application Configuration
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+  
+  fraud-detection:
+    # Risk score thresholds
+    threshold:
+      approve: 49
+      review: 79
+      reject: 80
+    
+    # Rule engine settings
+    rule-engine:
+      cache-ttl: 300 # seconds
+      max-rules: 1000
+    
+    # Rate limiting
+    rate-limit:
+      enabled: true
+      max-requests-per-minute: 100
+      max-requests-per-user: 50
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.fraud.detection: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/fraud-detection.log
+    max-size: 10MB
+    max-history: 30
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  show-actuator: true
