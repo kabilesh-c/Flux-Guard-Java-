@@ -1,0 +1,144 @@
+// Function to generate mock alerts
+export function generateMockAlerts(count: number = 10): Alert[] {
+  const levels: Array<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'> = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+  const statuses: Array<'NEW' | 'READ' | 'IN_PROGRESS' | 'RESOLVED' | 'DISMISSED'> = ['NEW', 'READ', 'IN_PROGRESS', 'RESOLVED', 'DISMISSED'];
+  
+  // Get some transaction IDs to link alerts to
+  const mockTransactions = generateMockTransactions(20);
+  
+  return Array.from({ length: count }).map((_, index) => {
+    // Use fixed ID if available, otherwise generate one
+    const id = index < FIXED_ALERT_IDS.length ? FIXED_ALERT_IDS[index] : `alt-${Date.now()}-${index}`;
+    
+    // If we have this alert cached, return it
+    if (alertCache[id]) {
+      return alertCache[id];
+    }
+    
+    // Link to a transaction
+    const transaction = mockTransactions[Math.floor(Math.random() * mockTransactions.length)];
+    const transactionId = transaction.id;
+    
+    // Determine level and status - weighted toward high severity and new status
+    const levelRand = Math.random();
+    let level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    if (levelRand < 0.1) level = 'LOW';
+    else if (levelRand < 0.3) level = 'MEDIUM';
+    else if (levelRand < 0.7) level = 'HIGH';
+    else level = 'CRITICAL';
+    
+    const statusRand = Math.random();
+    let status: 'NEW' | 'READ' | 'IN_PROGRESS' | 'RESOLVED' | 'DISMISSED';
+    if (statusRand < 0.4) status = 'NEW';
+    else if (statusRand < 0.6) status = 'READ';
+    else if (statusRand < 0.8) status = 'IN_PROGRESS';
+    else if (statusRand < 0.95) status = 'RESOLVED';
+    else status = 'DISMISSED';
+    
+    // Create title and message based on level and transaction
+    let title = '';
+    let message = '';
+    
+    if (level === 'CRITICAL') {
+      title = `Critical Fraud Alert: Transaction ${transaction.transaction_id}`;
+      message = `Transaction for ${transaction.amount} ${transaction.currency} has been flagged for suspicious activity with risk score ${transaction.risk_score}.`;
+    } else if (level === 'HIGH') {
+      title = `High Risk Transaction Detected: ${transaction.transaction_id}`;
+      message = `User ${transaction.user_id} performed a transaction with unusual characteristics. Risk score: ${transaction.risk_score}.`;
+    } else if (level === 'MEDIUM') {
+      title = `Suspicious Activity: ${transaction.transaction_id}`;
+      message = `Transaction from ${transaction.location?.country || 'unknown location'} requires review. Amount: ${transaction.amount} ${transaction.currency}.`;
+    } else {
+      title = `Low Risk Alert: ${transaction.transaction_id}`;
+      message = `Transaction slightly outside normal patterns. Review recommended.`;
+    }
+    
+    const createdAt = new Date(transaction.created_at);
+    // Some alerts may have been read
+    const readAt = status !== 'NEW' ? new Date(createdAt.getTime() + Math.random() * 3600000).toISOString() : undefined;
+    // Some alerts may have been resolved
+    const resolvedAt = status === 'RESOLVED' || status === 'DISMISSED' 
+      ? new Date(createdAt.getTime() + Math.random() * 7200000).toISOString() 
+      : undefined;
+    
+    const alert = {
+      id,
+      transaction_id: transactionId,
+      level,
+      title,
+      message,
+      status,
+      created_at: createdAt.toISOString(),
+      read_at: readAt,
+      resolved_at: resolvedAt
+    };
+    
+    // Store in cache for future reference
+    alertCache[id] = alert;
+    
+    return alert;
+  });
+}
+
+// Generate a paginated response of mock alerts
+export function getMockAlerts(page: number = 0, size: number = 20, statusFilter?: string): PaginatedResponse<Alert> {
+  // Generate a large pool of alerts
+  const allAlerts = generateMockAlerts(30);
+  
+  // Filter by status if provided
+  const filteredAlerts = statusFilter 
+    ? allAlerts.filter(a => a.status === statusFilter)
+    : allAlerts;
+  
+  // Calculate pagination
+  const start = page * size;
+  const end = start + size;
+  const paginatedContent = filteredAlerts.slice(start, end);
+  
+  return {
+    content: paginatedContent,
+    totalElements: filteredAlerts.length,
+    totalPages: Math.ceil(filteredAlerts.length / size),
+    size,
+    number: page,
+  };
+}
+
+// Add a new transaction and create appropriate alerts
+export function addMockTransaction(txData: any): Transaction {
+  // Create the transaction
+  const tx = createMockTransaction(txData);
+  
+  // Store it in our new transactions array
+  newTransactions.push(tx);
+  
+  // Create alerts for high risk transactions
+  if (tx.risk_score >= 50) {
+    const alertLevel: 'MEDIUM' | 'HIGH' | 'CRITICAL' = 
+      tx.risk_score >= 90 ? 'CRITICAL' :
+      tx.risk_score >= 70 ? 'HIGH' : 'MEDIUM';
+    
+    const alertTitle = alertLevel === 'CRITICAL' 
+      ? `Critical Risk Alert: ${tx.transaction_id}`
+      : `${alertLevel} Risk Transaction: ${tx.transaction_id}`;
+    
+    const alertMessage = `Transaction for ${tx.amount} ${tx.currency} from user ${tx.user_id} has been flagged with risk score ${tx.risk_score}.`;
+    
+    const alertId = `alt-new-${Date.now()}`;
+    
+    const alert: Alert = {
+      id: alertId,
+      transaction_id: tx.id,
+      level: alertLevel,
+      title: alertTitle,
+      message: alertMessage,
+      status: 'NEW',
+      created_at: new Date().toISOString()
+    };
+    
+    // Add to alert cache
+    alertCache[alertId] = alert;
+  }
+  
+  return tx;
+}
