@@ -449,10 +449,6 @@ MIT License - See LICENSE file for details
 
 **Built with ❤️ for secure financial transactions**
 
-## ?? Quick Links
-- [Setup Guide](./SETUP_GUIDE.md)
-- [Deployment](./DEPLOYMENT_CHECKLIST.md)
-
-## ?? Quick Links
+## 🔗 Quick Links
 - [Setup Guide](./SETUP_GUIDE.md)
 - [Deployment](./DEPLOYMENT_CHECKLIST.md)

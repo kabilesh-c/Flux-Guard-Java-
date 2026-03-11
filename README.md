@@ -356,8 +356,5 @@ For issues and questions:
 - React community for frontend tools
 - Supabase for database and authentication services
 
-## ?? Further Documentation
-See [INDEX.md](./INDEX.md) for full project documentation.
-
-## ?? Further Documentation
+## 📚 Further Documentation
 See [INDEX.md](./INDEX.md) for full project documentation.
