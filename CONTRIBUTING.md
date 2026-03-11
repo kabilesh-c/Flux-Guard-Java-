@@ -314,3 +314,6 @@ Contributors will be recognized in:
 - Project documentation
 
 Thank you for contributing to making financial transactions safer! 🛡️
+
+## Code of Conduct
+Please follow standard professional conduct when contributing.
